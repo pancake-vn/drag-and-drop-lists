@@ -1,14 +1,12 @@
-import 'dart:async';
-
 import 'package:drag_and_drop_lists/drag_and_drop_builder_parameters.dart';
+import 'package:drag_and_drop_lists/drag_and_drop_expansion_tile.dart';
 import 'package:drag_and_drop_lists/drag_and_drop_item.dart';
 import 'package:drag_and_drop_lists/drag_and_drop_item_target.dart';
 import 'package:drag_and_drop_lists/drag_and_drop_item_wrapper.dart';
 import 'package:drag_and_drop_lists/drag_and_drop_list_interface.dart';
-import 'package:drag_and_drop_lists/programmatic_expansion_tile.dart';
 import 'package:flutter/material.dart';
 
-typedef OnExpansionChanged = void Function(bool expanded);
+// typedef void OnExpansionChanged(bool expanded);
 
 /// This class mirrors flutter's [ExpansionTile], with similar options.
 class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
@@ -23,28 +21,32 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
   final Key listKey;
 
   /// This function will be called when the expansion of a tile is changed.
-  final OnExpansionChanged? onExpansionChanged;
+  // final OnExpansionChanged? onExpansionChanged;
+  final ValueChanged<bool>? onExpansionChanged;
+
   final Color? backgroundColor;
-  @override
   final List<DragAndDropItem>? children;
   final Widget? contentsWhenEmpty;
   final Widget? lastTarget;
-
-  /// Whether or not this item can be dragged.
-  /// Set to true if it can be reordered.
-  /// Set to false if it must remain fixed.
-  @override
   final bool canDrag;
-
-  @override
-  final Key? key;
 
   /// Disable to borders displayed at the top and bottom when expanded
   final bool disableTopAndBottomBorders;
 
-  final ValueNotifier<bool> _expanded = ValueNotifier<bool>(true);
-  final GlobalKey<ProgrammaticExpansionTileState> _expansionKey =
-      GlobalKey<ProgrammaticExpansionTileState>();
+  final bool pinnedTrailing;
+
+  // this 2 variables help user show item they want when expansion tile contains item is collapse
+  final itemSelectedInCollapse;
+  final bool conditionToShowItemSelected;
+  final Widget? persistentWidget;
+  final Widget? widgetHovered;
+  final Color? colorHovered;
+
+  /// global key always recreate, so we need to pass from parent
+  final GlobalKey<ProgrammaticExpansionTileState> expansionKey;
+  GlobalKey<ProgrammaticExpansionTileState> get _expansionKey => expansionKey;
+
+  ValueNotifier<bool> _expanded = ValueNotifier<bool>(true);
 
   DragAndDropListExpansion({
     this.children,
@@ -59,8 +61,14 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
     this.lastTarget,
     required this.listKey,
     this.canDrag = true,
-    this.key,
     this.disableTopAndBottomBorders = false,
+    this.pinnedTrailing = false,
+    required this.expansionKey,
+    this.conditionToShowItemSelected = false,
+    this.itemSelectedInCollapse,
+    this.persistentWidget,
+    this.widgetHovered,
+    this.colorHovered,
   }) {
     _expanded.value = initiallyExpanded;
   }
@@ -80,21 +88,21 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
       initiallyExpanded: initiallyExpanded,
       onExpansionChanged: _onSetExpansion,
       key: _expansionKey,
+      pinnedTrailing: pinnedTrailing,
+      conditionToShowItemSelected: conditionToShowItemSelected,
+      itemSelectedInCollapse: itemSelectedInCollapse,
+      widgetHovered: widgetHovered,
+      colorHovered: colorHovered,
       children: contents,
     );
 
     if (params.listDecoration != null) {
-      expandable = Container(
-        decoration: params.listDecoration,
-        child: expandable,
-      );
+      expandable =
+          Container(decoration: params.listDecoration, child: expandable);
     }
 
     if (params.listPadding != null) {
-      expandable = Padding(
-        padding: params.listPadding!,
-        child: expandable,
-      );
+      expandable = Padding(padding: params.listPadding!, child: expandable);
     }
 
     Widget toReturn = ValueListenableBuilder(
@@ -102,32 +110,91 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
       child: expandable,
       builder: (context, dynamic error, child) {
         if (!_expanded.value) {
-          return Stack(children: <Widget>[
-            child!,
-            Positioned.fill(
-              child: DragTarget<DragAndDropItem>(
-                builder: (context, candidateData, rejectedData) {
-                  if (candidateData.isNotEmpty) {}
-                  return Container();
-                },
-                onWillAcceptWithDetails: (details) {
-                  _startExpansionTimer();
-                  return false;
-                },
-                onLeave: (data) {
-                  _stopExpansionTimer();
-                },
-                onAcceptWithDetails: (details) {},
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: <Widget>[
+                  child!,
+                  Positioned.fill(
+                    child: DragTarget<DragAndDropItem>(
+                      builder: (context, candidateData, rejectedData) {
+                        if (candidateData.isNotEmpty) {}
+                        return Container();
+                      },
+                      onWillAcceptWithDetails: (incoming) {
+                        return true;
+                      },
+                      onLeave: (incoming) {},
+                      onAcceptWithDetails: (incoming) {
+                        if (children != null && children!.isNotEmpty) {
+                          params.onItemReordered!(
+                              incoming.data, children!.first);
+                        } else {
+                          children!.add(DragAndDropItem(
+                              child: Container(), feedbackWidget: Container()));
+                          params.onItemReordered!(
+                              incoming.data, children!.first);
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
-            )
-          ]);
+              if (persistentWidget != null) persistentWidget!,
+            ],
+          );
         } else {
-          return child!;
+          return Stack(
+            children: <Widget>[
+              child!,
+              SizedBox(
+                height: 36,
+                child: DragTarget<DragAndDropItem>(
+                  builder: (context, candidateData, rejectedData) {
+                    if (candidateData.isNotEmpty) {}
+                    return Container();
+                  },
+                  onWillAcceptWithDetails: (incoming) {
+                    return true;
+                  },
+                  onLeave: (incoming) {},
+                  onAcceptWithDetails: (incoming) {
+                    if (children != null && children!.isNotEmpty) {
+                      params.onItemReordered!(incoming.data, children!.first);
+                    } else {
+                      children!.add(DragAndDropItem(
+                          child: Container(), feedbackWidget: Container()));
+                      params.onItemReordered!(incoming.data, children!.first);
+                    }
+                  },
+                ),
+              ),
+            ],
+          );
         }
       },
     );
 
     return toReturn;
+  }
+
+  Widget generateWigetWithoutChildren() {
+    Widget expansionTileWithoutChildren = ProgrammaticExpansionTile(
+      title: title,
+      listKey: listKey,
+      subtitle: subtitle,
+      trailing: trailing,
+      leading: leading,
+      disableTopAndBottomBorders: disableTopAndBottomBorders,
+      backgroundColor: backgroundColor,
+      initiallyExpanded: initiallyExpanded,
+      onExpansionChanged: _onSetExpansion,
+      key: _expansionKey,
+      widgetHovered: widgetHovered,
+      colorHovered: colorHovered,
+    );
+    return expansionTileWithoutChildren;
   }
 
   List<Widget> _generateDragAndDropListInnerContents(
@@ -136,41 +203,31 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
     if (children != null && children!.isNotEmpty) {
       for (int i = 0; i < children!.length; i++) {
         contents.add(DragAndDropItemWrapper(
-          child: children![i],
-          parameters: parameters,
-        ));
+            child: children![i], parameters: parameters));
         if (parameters.itemDivider != null && i < children!.length - 1) {
           contents.add(parameters.itemDivider!);
         }
       }
-      contents.add(DragAndDropItemTarget(
-        parent: this,
-        parameters: parameters,
-        onReorderOrAdd: parameters.onItemDropOnLastTarget!,
-        child: lastTarget ??
-            Container(
-              height: parameters.lastItemTargetHeight,
-            ),
-      ));
-    } else {
-      contents.add(
-        contentsWhenEmpty ??
-            const Text(
-              'Empty list',
-              style: TextStyle(
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-      );
       contents.add(
         DragAndDropItemTarget(
           parent: this,
           parameters: parameters,
           onReorderOrAdd: parameters.onItemDropOnLastTarget!,
-          child: lastTarget ??
-              Container(
-                height: parameters.lastItemTargetHeight,
-              ),
+          child:
+              lastTarget ?? Container(height: parameters.lastItemTargetHeight),
+        ),
+      );
+    } else {
+      contents.add(contentsWhenEmpty ??
+          const Text('Empty list',
+              style: TextStyle(fontStyle: FontStyle.italic)));
+      contents.add(
+        DragAndDropItemTarget(
+          parent: this,
+          parameters: parameters,
+          onReorderOrAdd: parameters.onItemDropOnLastTarget!,
+          child:
+              lastTarget ?? Container(height: parameters.lastItemTargetHeight),
         ),
       );
     }
@@ -211,19 +268,6 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
   @override
   get isExpanded => _expanded.value;
 
-  late Timer _expansionTimer;
-
-  _startExpansionTimer() async {
-    _expansionTimer = Timer(const Duration(milliseconds: 400), _expansionCallback);
-  }
-
-  _stopExpansionTimer() async {
-    if (_expansionTimer.isActive) {
-      _expansionTimer.cancel();
-    }
-  }
-
-  _expansionCallback() {
-    expand();
-  }
+  @override
+  Widget? generateHeaderWidget() => title;
 }

@@ -32,6 +32,9 @@ class _DragAndDropListWrapper extends State<DragAndDropListWrapper>
   Widget build(BuildContext context) {
     Widget dragAndDropListContents =
         widget.dragAndDropList.generateWidget(widget.parameters);
+    Widget dragAndDropListHeader =
+        widget.dragAndDropList.generateHeaderWidget() ??
+            dragAndDropListContents;
 
     Widget draggable;
     if (widget.dragAndDropList.canDrag) {
@@ -90,8 +93,7 @@ class _DragAndDropListWrapper extends State<DragAndDropListWrapper>
         draggable = LongPressDraggable<DragAndDropListInterface>(
           data: widget.dragAndDropList,
           axis: draggableAxis(),
-          feedback:
-              buildFeedbackWithoutHandle(context, dragAndDropListContents),
+          feedback: buildFeedbackWithoutHandle(context, dragAndDropListHeader),
           childWhenDragging: Container(),
           onDragStarted: () => _setDragging(true),
           onDragCompleted: () => _setDragging(false),
@@ -103,8 +105,7 @@ class _DragAndDropListWrapper extends State<DragAndDropListWrapper>
         draggable = Draggable<DragAndDropListInterface>(
           data: widget.dragAndDropList,
           axis: draggableAxis(),
-          feedback:
-              buildFeedbackWithoutHandle(context, dragAndDropListContents),
+          feedback: buildFeedbackWithoutHandle(context, dragAndDropListHeader),
           childWhenDragging: Container(),
           onDragStarted: () => _setDragging(true),
           onDragCompleted: () => _setDragging(false),
@@ -254,7 +255,7 @@ class _DragAndDropListWrapper extends State<DragAndDropListWrapper>
   }
 
   SizedBox buildFeedbackWithoutHandle(
-      BuildContext context, Widget dragAndDropListContents) {
+      BuildContext context, Widget dragAndDropListHeader) {
     return SizedBox(
       width: widget.parameters.axis == Axis.vertical
           ? (widget.parameters.listDraggingWidth ??
@@ -267,7 +268,14 @@ class _DragAndDropListWrapper extends State<DragAndDropListWrapper>
           decoration: widget.parameters.listDecorationWhileDragging,
           child: Directionality(
             textDirection: Directionality.of(context),
-            child: dragAndDropListContents,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              child: Row(
+                children: [
+                  dragAndDropListHeader,
+                ],
+              ),
+            ),
           ),
         ),
       ),
