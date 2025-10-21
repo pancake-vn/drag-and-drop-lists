@@ -262,18 +262,22 @@ class _DragAndDropListWrapper extends State<DragAndDropListWrapper>
               MediaQuery.of(context).size.width)
           : (widget.parameters.listDraggingWidth ??
               widget.parameters.listWidth),
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          decoration: widget.parameters.listDecorationWhileDragging,
-          child: Directionality(
-            textDirection: Directionality.of(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: Row(
-                children: [
-                  dragAndDropListHeader,
-                ],
+      child: Opacity(
+        opacity: 0.6,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            decoration: widget.parameters.listDecorationWhileDragging,
+            child: Directionality(
+              textDirection: Directionality.of(context),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: Row(
+                  children: [
+                    dragAndDropListHeader,
+                  ],
+                ),
               ),
             ),
           ),

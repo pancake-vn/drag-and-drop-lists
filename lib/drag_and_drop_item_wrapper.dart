@@ -152,13 +152,16 @@ class _DragAndDropItemWrapper extends State<DragAndDropItemWrapper>
             feedback: SizedBox(
               width:
                   widget.parameters!.itemDraggingWidth ?? _containerSize.width,
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  decoration: widget.parameters!.itemDecorationWhileDragging,
-                  child: Directionality(
-                    textDirection: Directionality.of(context),
-                    child: widget.child.feedbackWidget ?? widget.child.child,
+              child: Opacity(
+                opacity: 0.6,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    decoration: widget.parameters!.itemDecorationWhileDragging,
+                    child: Directionality(
+                      textDirection: Directionality.of(context),
+                      child: widget.child.feedbackWidget ?? widget.child.child,
+                    ),
                   ),
                 ),
               ),
@@ -236,7 +239,8 @@ class _DragAndDropItemWrapper extends State<DragAndDropItemWrapper>
               if (mounted) {
                 setState(() {
                   if (widget.parameters!.onItemReordered != null) {
-                    widget.parameters!.onItemReordered!(details.data, widget.child);
+                    widget.parameters!.onItemReordered!(
+                        details.data, widget.child);
                   }
                   _hoveredDraggable = null;
                 });
