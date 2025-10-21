@@ -49,8 +49,9 @@ class DragAndDropList implements DragAndDropListInterface {
   /// Set to false if it must remain fixed.
   @override
   final bool canDrag;
-  @override
+
   final Key? key;
+
   DragAndDropList({
     required this.children,
     this.key,
@@ -191,4 +192,7 @@ class DragAndDropList implements DragAndDropListInterface {
     }
     return contents;
   }
+
+  @override
+  Widget? generateHeaderWidget() => header;
 }
