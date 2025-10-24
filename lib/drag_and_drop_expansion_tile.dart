@@ -4,16 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-// import 'package:flutter/scheduler.dart';
-// import 'package:just_the_tooltip/just_the_tooltip.dart';
-// import 'package:pancake_work_core/data/models/device_settings.dart';
-// import 'package:pancake_work_ui/pancake_work_ui.dart';
-// import 'package:phosphor_flutter/phosphor_flutter.dart';
-// import 'package:workcake/generated/l10n.dart';
-// import 'package:pancake_work_core/domain/providers/app_settings_provider.dart';
-// import 'package:workcake/providers/providers.dart';
 
-const Duration _kExpand = Duration(milliseconds: 200);
+const Duration _kExpand = Duration(milliseconds: 0);
 
 class ProgrammaticExpansionTile extends StatefulWidget {
   const ProgrammaticExpansionTile({
@@ -110,8 +102,6 @@ class ProgrammaticExpansionTileState extends State<ProgrammaticExpansionTile>
       CurveTween(curve: Curves.easeOut);
   static final Animatable<double> _easeInTween =
       CurveTween(curve: Curves.easeIn);
-  // static final Animatable<double> _halfTween =
-  //     Tween<double>(begin: 0.0, end: 0.5);
   static final Animatable<double> _quarterTween =
       Tween<double>(begin: 0.0, end: 0.25);
 
@@ -122,7 +112,6 @@ class ProgrammaticExpansionTileState extends State<ProgrammaticExpansionTile>
 
   late AnimationController _controller;
   late Animation<double> _iconTurns;
-  late Animation<double> _heightFactor;
   late Animation<Color?> _borderColor;
   late Animation<Color?> _headerColor;
   late Animation<Color?> _iconColor;
@@ -135,7 +124,6 @@ class ProgrammaticExpansionTileState extends State<ProgrammaticExpansionTile>
   void initState() {
     super.initState();
     _controller = AnimationController(duration: _kExpand, vsync: this);
-    _heightFactor = _controller.drive(_easeInTween);
     _iconTurns = _controller.drive(_quarterTween.chain(_easeInTween));
     _borderColor = _controller.drive(_borderColorTween.chain(_easeOutTween));
     _headerColor = _controller.drive(_headerColorTween.chain(_easeInTween));
@@ -200,99 +188,6 @@ class ProgrammaticExpansionTileState extends State<ProgrammaticExpansionTile>
     }
   }
 
-  Widget _buildChildren(BuildContext context, Widget? child) {
-    final Color borderSideColor = _borderColor.value ?? Colors.transparent;
-    bool setBorder = !widget.disableTopAndBottomBorders;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: _backgroundColor.value ?? Colors.transparent,
-        border: setBorder
-            ? Border(
-                top: BorderSide(color: borderSideColor),
-                bottom: BorderSide(color: borderSideColor))
-            : null,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          ListTileTheme.merge(
-            iconColor: _iconColor.value,
-            textColor: _headerColor.value,
-            child: MouseRegion(
-              onEnter: (event) {
-                setState(() {
-                  _isHover = true;
-                });
-              },
-              onExit: (event) {
-                setState(() {
-                  _isHover = false;
-                });
-              },
-              child: Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: _isHover
-                      ? widget.colorHovered ?? Colors.transparent
-                      : null,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: ListTile(
-                  dense: true,
-                  onTap: toggle,
-                  leading: Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: RotationTransition(
-                      turns: _iconTurns,
-                      child: widget.leading ??
-                          const Icon(Icons.expand_more,
-                              color: Color(0xffa9acb6), size: 16),
-                    ),
-                  ),
-                  horizontalTitleGap: 10,
-                  minLeadingWidth: 4,
-                  title: Container(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    alignment: Alignment.centerLeft,
-                    height: double.infinity,
-                    child: Row(
-                      children: [
-                        widget.title ?? Container(),
-                        if (_isHover) const SizedBox(width: 8),
-                        if (_isHover) widget.widgetHovered ?? Container(),
-                      ],
-                    ),
-                  ),
-                  subtitle: widget.subtitle,
-                  isThreeLine: widget.isThreeLine,
-                  trailing: Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: widget.pinnedTrailing
-                        ? widget.trailing
-                        : _isHover
-                            ? widget.trailing ??
-                                RotationTransition(
-                                    turns: _iconTurns,
-                                    child: const Icon(Icons.expand_more))
-                            : const SizedBox(),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          ClipRect(
-              child: Align(heightFactor: _heightFactor.value, child: child)),
-          if (!_isExpanded &&
-              widget.conditionToShowItemSelected &&
-              widget.itemSelectedInCollapse != null)
-            widget.itemSelectedInCollapse,
-        ],
-      ),
-    );
-  }
-
   @override
   void didChangeDependencies() {
     final ThemeData theme = Theme.of(context);
@@ -309,11 +204,100 @@ class ProgrammaticExpansionTileState extends State<ProgrammaticExpansionTile>
 
   @override
   Widget build(BuildContext context) {
-    final bool closed = !_isExpanded && _controller.isDismissed;
     return AnimatedBuilder(
       animation: _controller.view,
-      builder: _buildChildren,
-      child: closed ? null : Column(children: widget.children as List<Widget>),
+      builder: (context, child) {
+        final Color borderSideColor = _borderColor.value ?? Colors.transparent;
+        bool setBorder = !widget.disableTopAndBottomBorders;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: _backgroundColor.value ?? Colors.transparent,
+            border: setBorder
+                ? Border(
+                    top: BorderSide(color: borderSideColor),
+                    bottom: BorderSide(color: borderSideColor),
+                  )
+                : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTileTheme.merge(
+                iconColor: _iconColor.value,
+                textColor: _headerColor.value,
+                child: MouseRegion(
+                  onEnter: (_) => setState(() => _isHover = true),
+                  onExit: (_) => setState(() => _isHover = false),
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _isHover
+                          ? widget.colorHovered ?? Colors.transparent
+                          : null,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: ListTile(
+                      dense: true,
+                      onTap: toggle,
+                      leading: Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: RotationTransition(
+                          turns: _iconTurns,
+                          child: widget.leading ??
+                              const Icon(Icons.expand_more,
+                                  color: Color(0xffa9acb6), size: 16),
+                        ),
+                      ),
+                      horizontalTitleGap: 10,
+                      minLeadingWidth: 4,
+                      title: Container(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        alignment: Alignment.centerLeft,
+                        height: double.infinity,
+                        child: Row(
+                          children: [
+                            widget.title ?? Container(),
+                            if (_isHover) const SizedBox(width: 8),
+                            if (_isHover) widget.widgetHovered ?? Container(),
+                          ],
+                        ),
+                      ),
+                      subtitle: widget.subtitle,
+                      isThreeLine: widget.isThreeLine,
+                      trailing: Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: widget.pinnedTrailing
+                            ? widget.trailing
+                            : _isHover
+                                ? widget.trailing ??
+                                    RotationTransition(
+                                      turns: _iconTurns,
+                                      child: const Icon(Icons.expand_more),
+                                    )
+                                : const SizedBox(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              ClipRect(
+                child: FadeTransition(
+                  opacity: _controller,
+                  child: _isExpanded
+                      ? Column(children: widget.children as List<Widget>)
+                      : null,
+                ),
+              ),
+              if (!_isExpanded &&
+                  widget.conditionToShowItemSelected &&
+                  widget.itemSelectedInCollapse != null)
+                widget.itemSelectedInCollapse,
+            ],
+          ),
+        );
+      },
     );
   }
 }
