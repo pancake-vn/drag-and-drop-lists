@@ -12,11 +12,14 @@ class DragAndDropItem implements DragAndDropInterface {
   /// Set to true if it can be reordered.
   /// Set to false if it must remain fixed.
   final bool canDrag;
-  final Key? key;
+
+  /// Required for stable comparison between items.
+  final Key key;
+
   DragAndDropItem({
     required this.child,
+    required this.key,
     this.feedbackWidget,
     this.canDrag = true,
-    this.key,
   });
 }

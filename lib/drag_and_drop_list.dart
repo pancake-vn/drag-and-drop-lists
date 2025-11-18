@@ -50,11 +50,13 @@ class DragAndDropList implements DragAndDropListInterface {
   @override
   final bool canDrag;
 
-  final Key? key;
+  /// Required for stable comparison between lists.
+  @override
+  final Key key;
 
   DragAndDropList({
     required this.children,
-    this.key,
+    required this.key,
     this.header,
     this.footer,
     this.leftSide,

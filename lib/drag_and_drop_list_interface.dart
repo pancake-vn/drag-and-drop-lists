@@ -13,6 +13,9 @@ abstract class DragAndDropListInterface implements DragAndDropInterface {
 
   Widget generateWidget(DragAndDropBuilderParameters params);
   Widget? generateHeaderWidget();
+
+  /// Required for stable comparison between lists.
+  Key get key;
 }
 
 abstract class DragAndDropListExpansionInterface

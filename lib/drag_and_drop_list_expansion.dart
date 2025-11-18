@@ -18,7 +18,8 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
 
   /// Set this to a unique key that will remain unchanged over the lifetime of the list.
   /// Used to maintain the expanded/collapsed states
-  final Key listKey;
+  @override
+  final Key key;
 
   /// This function will be called when the expansion of a tile is changed.
   // final OnExpansionChanged? onExpansionChanged;
@@ -59,7 +60,7 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
     this.onExpansionChanged,
     this.contentsWhenEmpty,
     this.lastTarget,
-    required this.listKey,
+    required this.key,
     this.canDrag = true,
     this.disableTopAndBottomBorders = false,
     this.pinnedTrailing = false,
@@ -79,7 +80,7 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
 
     Widget expandable = ProgrammaticExpansionTile(
       title: title,
-      listKey: listKey,
+      listKey: key,
       subtitle: subtitle,
       trailing: trailing,
       leading: leading,
@@ -128,13 +129,9 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
                       onLeave: (incoming) {},
                       onAcceptWithDetails: (incoming) {
                         if (children != null && children!.isNotEmpty) {
-                          params.onItemReordered!(
-                              incoming.data, children!.first);
+                          params.onItemReordered!(incoming.data, children!.first);
                         } else {
-                          children!.add(DragAndDropItem(
-                              child: Container(), feedbackWidget: Container()));
-                          params.onItemReordered!(
-                              incoming.data, children!.first);
+                          params.onItemReordered!(incoming.data, children!.first);
                         }
                       },
                     ),
@@ -163,8 +160,6 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
                     if (children != null && children!.isNotEmpty) {
                       params.onItemReordered!(incoming.data, children!.first);
                     } else {
-                      children!.add(DragAndDropItem(
-                          child: Container(), feedbackWidget: Container()));
                       params.onItemReordered!(incoming.data, children!.first);
                     }
                   },
@@ -182,7 +177,7 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
   Widget generateWigetWithoutChildren() {
     Widget expansionTileWithoutChildren = ProgrammaticExpansionTile(
       title: title,
-      listKey: listKey,
+      listKey: key,
       subtitle: subtitle,
       trailing: trailing,
       leading: leading,

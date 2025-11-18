@@ -563,12 +563,12 @@ class DragAndDropListsState extends State<DragAndDropLists> {
     for (int i = 0; i < widget.children.length; i++) {
       if (reorderedItemIndex == -1) {
         reorderedItemIndex =
-            widget.children[i].children!.indexWhere((e) => reordered == e);
+            widget.children[i].children!.indexWhere((e) => reordered.key == e.key);
         if (reorderedItemIndex != -1) reorderedListIndex = i;
       }
       if (receiverItemIndex == -1) {
         receiverItemIndex =
-            widget.children[i].children!.indexWhere((e) => receiver == e);
+            widget.children[i].children!.indexWhere((e) => receiver.key == e.key);
         if (receiverItemIndex != -1) receiverListIndex = i;
       }
       if (reorderedItemIndex != -1 && receiverItemIndex != -1) {
@@ -595,8 +595,8 @@ class DragAndDropListsState extends State<DragAndDropLists> {
 
   _internalOnListReorder(
       DragAndDropListInterface reordered, DragAndDropListInterface receiver) {
-    int reorderedListIndex = widget.children.indexWhere((e) => reordered == e);
-    int receiverListIndex = widget.children.indexWhere((e) => receiver == e);
+    int reorderedListIndex = widget.children.indexWhere((e) => reordered.key == e.key);
+    int receiverListIndex = widget.children.indexWhere((e) => receiver.key == e.key);
 
     int newListIndex = receiverListIndex;
 
@@ -629,7 +629,7 @@ class DragAndDropListsState extends State<DragAndDropLists> {
       for (int i = 0; i < widget.children.length; i++) {
         if (reorderedItemIndex == -1) {
           reorderedItemIndex = widget.children[i].children
-                  ?.indexWhere((e) => newOrReordered == e) ??
+                  ?.indexWhere((e) => newOrReordered.key == e.key) ??
               -1;
           if (reorderedItemIndex != -1) reorderedListIndex = i;
         }
@@ -665,7 +665,7 @@ class DragAndDropListsState extends State<DragAndDropLists> {
       DragAndDropListInterface newOrReordered, DragAndDropListTarget receiver) {
     // determine if newOrReordered is new or existing
     int reorderedListIndex =
-        widget.children.indexWhere((e) => newOrReordered == e);
+        widget.children.indexWhere((e) => newOrReordered.key == e.key);
 
     if (widget.listOnAccept != null) {
       widget.listTargetOnAccept!(newOrReordered, receiver);
