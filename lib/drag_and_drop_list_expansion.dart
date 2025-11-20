@@ -131,6 +131,7 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
                         if (children != null && children!.isNotEmpty) {
                           params.onItemReordered!(incoming.data, children!.first);
                         } else {
+                          children!.add(DragAndDropItem(key: UniqueKey(), child: Container()));
                           params.onItemReordered!(incoming.data, children!.first);
                         }
                       },
@@ -160,6 +161,7 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
                     if (children != null && children!.isNotEmpty) {
                       params.onItemReordered!(incoming.data, children!.first);
                     } else {
+                      children!.add(DragAndDropItem(key: UniqueKey(), child: Container()));
                       params.onItemReordered!(incoming.data, children!.first);
                     }
                   },
