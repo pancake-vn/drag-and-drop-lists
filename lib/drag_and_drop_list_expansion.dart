@@ -4,6 +4,7 @@ import 'package:drag_and_drop_lists/drag_and_drop_item.dart';
 import 'package:drag_and_drop_lists/drag_and_drop_item_target.dart';
 import 'package:drag_and_drop_lists/drag_and_drop_item_wrapper.dart';
 import 'package:drag_and_drop_lists/drag_and_drop_list_interface.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 // typedef void OnExpansionChanged(bool expanded);
@@ -36,6 +37,11 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
 
   final bool pinnedTrailing;
 
+  /// When set, a non-pinned [trailing] stays visible while this listenable is
+  /// `true`, in addition to while the header is hovered. Lets a caller keep an
+  /// interactive trailing (e.g. an open dropdown) shown after the header loses hover.
+  final ValueListenable<bool>? keepTrailingVisible;
+
   // this 2 variables help user show item they want when expansion tile contains item is collapse
   final itemSelectedInCollapse;
   final bool conditionToShowItemSelected;
@@ -64,6 +70,7 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
     this.canDrag = true,
     this.disableTopAndBottomBorders = false,
     this.pinnedTrailing = false,
+    this.keepTrailingVisible,
     required this.expansionKey,
     this.conditionToShowItemSelected = false,
     this.itemSelectedInCollapse,
@@ -90,6 +97,7 @@ class DragAndDropListExpansion implements DragAndDropListExpansionInterface {
       onExpansionChanged: _onSetExpansion,
       key: _expansionKey,
       pinnedTrailing: pinnedTrailing,
+      keepTrailingVisible: keepTrailingVisible,
       conditionToShowItemSelected: conditionToShowItemSelected,
       itemSelectedInCollapse: itemSelectedInCollapse,
       widgetHovered: widgetHovered,

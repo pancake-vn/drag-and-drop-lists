@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -22,6 +23,7 @@ class ProgrammaticExpansionTile extends StatefulWidget {
     required this.initiallyExpanded,
     this.disableTopAndBottomBorders = false,
     this.pinnedTrailing = false,
+    this.keepTrailingVisible,
     // this.firstFunction,
     // this.titleFirstFunction,
     // this.titleSecondFunction,
@@ -83,6 +85,12 @@ class ProgrammaticExpansionTile extends StatefulWidget {
 
   /// Pin trailing in any case (case hover and not hover)
   final bool pinnedTrailing;
+
+  /// When set, a non-pinned [trailing] stays visible while this listenable is
+  /// `true`, in addition to while the header is hovered. Lets a caller keep an
+  /// interactive trailing shown after the header loses hover — e.g. a dropdown
+  /// whose open menu steals the hover but should keep its trigger on screen.
+  final ValueListenable<bool>? keepTrailingVisible;
 
   // this 2 variables help user show item they want when expansion tile contains item is collapse
   final itemSelectedInCollapse;
@@ -202,6 +210,24 @@ class ProgrammaticExpansionTileState extends State<ProgrammaticExpansionTile>
     super.didChangeDependencies();
   }
 
+  /// Renders a non-pinned [trailing] that stays mounted (so stateful trailings
+  /// survive) and is shown while the header is hovered or [ProgrammaticExpansionTile.keepTrailingVisible]
+  /// is `true`. Unmounting it instead (swapping to a SizedBox) would tear down a
+  /// stateful trailing the moment it is used — e.g. a dropdown whose open menu
+  /// steals the header's hover would dispose and dismiss itself the instant it opened.
+  Widget _buildHoverableTrailing(Widget trailing) {
+    final keepVisible = widget.keepTrailingVisible;
+    if (keepVisible == null) {
+      return Visibility(visible: _isHover, maintainState: true, child: trailing);
+    }
+    return ValueListenableBuilder<bool>(
+      valueListenable: keepVisible,
+      child: trailing,
+      builder: (context, pinned, child) =>
+          Visibility(visible: _isHover || pinned, maintainState: true, child: child!),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -277,17 +303,7 @@ class ProgrammaticExpansionTileState extends State<ProgrammaticExpansionTile>
                         child: widget.pinnedTrailing
                             ? widget.trailing
                             : widget.trailing != null
-                                // Keep a caller-supplied trailing permanently mounted and only
-                                // toggle its visibility on hover. Swapping it for a SizedBox (as the
-                                // null-trailing branch does) unmounts it, which tears down stateful
-                                // trailings the moment they are used — e.g. a dropdown whose menu
-                                // overlay steals the header's hover would dispose and dismiss itself
-                                // the instant it opened.
-                                ? Visibility(
-                                    visible: _isHover,
-                                    maintainState: true,
-                                    child: widget.trailing!,
-                                  )
+                                ? _buildHoverableTrailing(widget.trailing!)
                                 : _isHover
                                     ? RotationTransition(
                                         turns: _iconTurns,
