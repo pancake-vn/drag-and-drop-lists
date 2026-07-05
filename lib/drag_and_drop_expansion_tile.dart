@@ -239,9 +239,16 @@ class ProgrammaticExpansionTileState extends State<ProgrammaticExpansionTile>
                     ),
                     child: ListTile(
                       dense: true,
+                      // Pin to standard density so horizontalTitleGap maps 1:1. The ambient
+                      // (desktop/compact) density would otherwise subtract `horizontal * 2` from
+                      // the gap, collapsing a small gap like 4 to 0.
+                      visualDensity: VisualDensity.standard,
+                      contentPadding: const EdgeInsets.only(left: 8, right: 4),
                       onTap: toggle,
                       leading: Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
+                        // Shared `bottom: 6` baseline (same as title/trailing) keeps the caret
+                        // vertically aligned with the text, plus 4px around the icon.
+                        padding: const EdgeInsets.fromLTRB(4, 4, 4, 10),
                         child: RotationTransition(
                           turns: _iconTurns,
                           child: widget.leading ??
@@ -249,7 +256,7 @@ class ProgrammaticExpansionTileState extends State<ProgrammaticExpansionTile>
                                   color: Color(0xffa9acb6), size: 16),
                         ),
                       ),
-                      horizontalTitleGap: 10,
+                      horizontalTitleGap: 4,
                       minLeadingWidth: 4,
                       title: Container(
                         padding: const EdgeInsets.only(bottom: 6),
@@ -269,13 +276,24 @@ class ProgrammaticExpansionTileState extends State<ProgrammaticExpansionTile>
                         padding: const EdgeInsets.only(bottom: 6),
                         child: widget.pinnedTrailing
                             ? widget.trailing
-                            : _isHover
-                                ? widget.trailing ??
-                                    RotationTransition(
-                                      turns: _iconTurns,
-                                      child: const Icon(Icons.expand_more),
-                                    )
-                                : const SizedBox(),
+                            : widget.trailing != null
+                                // Keep a caller-supplied trailing permanently mounted and only
+                                // toggle its visibility on hover. Swapping it for a SizedBox (as the
+                                // null-trailing branch does) unmounts it, which tears down stateful
+                                // trailings the moment they are used — e.g. a dropdown whose menu
+                                // overlay steals the header's hover would dispose and dismiss itself
+                                // the instant it opened.
+                                ? Visibility(
+                                    visible: _isHover,
+                                    maintainState: true,
+                                    child: widget.trailing!,
+                                  )
+                                : _isHover
+                                    ? RotationTransition(
+                                        turns: _iconTurns,
+                                        child: const Icon(Icons.expand_more),
+                                      )
+                                    : const SizedBox(),
                       ),
                     ),
                   ),
