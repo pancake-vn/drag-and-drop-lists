@@ -263,53 +263,60 @@ class ProgrammaticExpansionTileState extends State<ProgrammaticExpansionTile>
                           : null,
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: ListTile(
-                      dense: true,
-                      // Pin to standard density so horizontalTitleGap maps 1:1. The ambient
-                      // (desktop/compact) density would otherwise subtract `horizontal * 2` from
-                      // the gap, collapsing a small gap like 4 to 0.
-                      visualDensity: VisualDensity.standard,
-                      contentPadding: const EdgeInsets.only(left: 8, right: 4),
-                      onTap: toggle,
-                      leading: Padding(
-                        // Shared `bottom: 6` baseline (same as title/trailing) keeps the caret
-                        // vertically aligned with the text, plus 4px around the icon.
-                        padding: const EdgeInsets.fromLTRB(4, 4, 4, 10),
-                        child: RotationTransition(
-                          turns: _iconTurns,
-                          child: widget.leading ??
-                              const Icon(Icons.expand_more,
-                                  color: Color(0xffa9acb6), size: 16),
+                    child: Material(
+                      // Flutter 3.44 asserts when a ListTile has a colour-painting ancestor
+                      // between it and the nearest Material: the tile's background and ink
+                      // splashes render underneath and are invisible. Consumers wrap this
+                      // tile in decorated containers, so give it its own Material.
+                      type: MaterialType.transparency,
+                      child: ListTile(
+                        dense: true,
+                        // Pin to standard density so horizontalTitleGap maps 1:1. The ambient
+                        // (desktop/compact) density would otherwise subtract `horizontal * 2` from
+                        // the gap, collapsing a small gap like 4 to 0.
+                        visualDensity: VisualDensity.standard,
+                        contentPadding: const EdgeInsets.only(left: 8, right: 4),
+                        onTap: toggle,
+                        leading: Padding(
+                          // Shared `bottom: 6` baseline (same as title/trailing) keeps the caret
+                          // vertically aligned with the text, plus 4px around the icon.
+                          padding: const EdgeInsets.fromLTRB(4, 4, 4, 10),
+                          child: RotationTransition(
+                            turns: _iconTurns,
+                            child: widget.leading ??
+                                const Icon(Icons.expand_more,
+                                    color: Color(0xffa9acb6), size: 16),
+                          ),
                         ),
-                      ),
-                      horizontalTitleGap: 4,
-                      minLeadingWidth: 4,
-                      title: Container(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        alignment: Alignment.centerLeft,
-                        height: double.infinity,
-                        child: Row(
-                          children: [
-                            widget.title ?? Container(),
-                            if (_isHover) const SizedBox(width: 8),
-                            if (_isHover) widget.widgetHovered ?? Container(),
-                          ],
+                        horizontalTitleGap: 4,
+                        minLeadingWidth: 4,
+                        title: Container(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          alignment: Alignment.centerLeft,
+                          height: double.infinity,
+                          child: Row(
+                            children: [
+                              widget.title ?? Container(),
+                              if (_isHover) const SizedBox(width: 8),
+                              if (_isHover) widget.widgetHovered ?? Container(),
+                            ],
+                          ),
                         ),
-                      ),
-                      subtitle: widget.subtitle,
-                      isThreeLine: widget.isThreeLine,
-                      trailing: Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: widget.pinnedTrailing
-                            ? widget.trailing
-                            : widget.trailing != null
-                                ? _buildHoverableTrailing(widget.trailing!)
-                                : _isHover
-                                    ? RotationTransition(
-                                        turns: _iconTurns,
-                                        child: const Icon(Icons.expand_more),
-                                      )
-                                    : const SizedBox(),
+                        subtitle: widget.subtitle,
+                        isThreeLine: widget.isThreeLine,
+                        trailing: Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: widget.pinnedTrailing
+                              ? widget.trailing
+                              : widget.trailing != null
+                                  ? _buildHoverableTrailing(widget.trailing!)
+                                  : _isHover
+                                      ? RotationTransition(
+                                          turns: _iconTurns,
+                                          child: const Icon(Icons.expand_more),
+                                        )
+                                      : const SizedBox(),
+                        ),
                       ),
                     ),
                   ),
